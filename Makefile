@@ -52,7 +52,8 @@ minikube-start:
 	# Ensure SSH bridge watcher is running and aggressively establish port forward during startup
 	( bash .devcontainer/minikube-ssh-forwarder.sh run >/dev/null 2>&1 || true )
 	( nohup bash .devcontainer/minikube-ensure-ssh-bridge.sh >/dev/null 2>&1 & )
-	minikube start --driver=docker --native-ssh=false
+	minikube start --driver=docker --native-ssh=false \
+		--addons=dashboard,metrics-server,storage-provisioner
 	# Reconcile kubectl to the server version (non-fatal on failure)
 	( bash .devcontainer/reconcile-kubectl.sh >/dev/null 2>&1 || true )
 
@@ -62,7 +63,7 @@ minikube-start-ml:
 	( nohup bash .devcontainer/minikube-ensure-ssh-bridge.sh >/dev/null 2>&1 & )
 	minikube start --driver=docker --native-ssh=false \
 		--cpus=4 --memory=8192 \
-		--addons=metrics-server,storage-provisioner
+		--addons=dashboard,metrics-server,storage-provisioner
 	( bash .devcontainer/reconcile-kubectl.sh >/dev/null 2>&1 || true )
 	@echo ""
 	@echo "✅ ML cluster ready with metrics-server enabled"
