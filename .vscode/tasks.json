@@ -1,0 +1,93 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Minikube: Start",
+      "type": "shell",
+      "command": "make",
+      "args": ["minikube-start"],
+      "problemMatcher": [],
+      "group": "none"
+    },
+    {
+      "label": "Minikube: Dashboard (Open)",
+      "type": "shell",
+      "command": "make",
+      "args": ["minikube-dashboard"],
+      "problemMatcher": [],
+      "group": "none"
+    },
+    {
+      "label": "Minikube: Dashboard URL",
+      "type": "shell",
+      "command": "make",
+      "args": ["minikube-dashboard-url"],
+      "problemMatcher": [],
+      "group": "none"
+    },
+    {
+      "label": "Minikube: Dashboard Stop",
+      "type": "shell",
+      "command": "make",
+      "args": ["minikube-dashboard-stop"],
+      "problemMatcher": [],
+      "group": "none"
+    },
+    {
+      "label": "Minikube: Stop",
+      "type": "shell",
+      "command": "make",
+      "args": ["minikube-stop"],
+      "problemMatcher": [],
+      "group": "none"
+    },
+    {
+      "label": "Minikube: Delete",
+      "type": "shell",
+      "command": "make",
+      "args": ["minikube-delete"],
+      "problemMatcher": [],
+      "group": "none"
+    },
+    {
+      "label": "Minikube: Status",
+      "type": "shell",
+      "command": "make",
+      "args": ["minikube-status"],
+      "problemMatcher": [],
+      "group": "none"
+    },
+    {
+      "label": "Kubernetes: Nodes",
+      "type": "shell",
+      "command": "make",
+      "args": ["k8s-nodes"],
+      "problemMatcher": [],
+      "group": "none"
+    },
+    {
+      "label": "Kubernetes: Contexts",
+      "type": "shell",
+      "command": "make",
+      "args": ["k8s-contexts"],
+      "problemMatcher": [],
+      "group": "none"
+    },
+    {
+      "label": "Kubernetes: Cluster Info",
+      "type": "shell",
+      "command": "make",
+      "args": ["cluster-info"],
+      "problemMatcher": [],
+      "group": "none"
+    },
+    {
+      "label": "Helm: Version",
+      "type": "shell",
+      "command": "make",
+      "args": ["helm-version"],
+      "problemMatcher": [],
+      "group": "none"
+    }
+  ]
+}

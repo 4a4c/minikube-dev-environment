@@ -5,31 +5,18 @@
   // Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
   "image": "mcr.microsoft.com/devcontainers/python:2-3.12-bullseye",
 
-  // Features to add to the dev container. More info: https://containers.dev/features.
-  "features": {
-    "ghcr.io/devcontainers/features/common-utils:2": {
-      "installZsh": true,
-      "installOhMyZsh": true,
-      "upgradePackages": true,
-      "username": "vscode",
-      "userUid": "automatic",
-      "userGid": "automatic"
-    },
-    "ghcr.io/devcontainers/features/kubectl-helm-minikube:1": {
-      "version": "latest",
-      "helm": "latest",
-      "minikube": "latest"
-    }
-  },
+  // Intentionally no Features block to avoid buildx-based feature builds that can fail with credential helpers.
 
   // Use 'forwardPorts' to make a list of ports inside the container available locally.
   // "forwardPorts": [],
 
-  // Mount local shell and git configuration
-  // Files vs directories on host:
+  // Mount local configurations and Docker socket from host to container
+  // This allows kubectl/helm to use your local configs and Docker daemon
+  // Minikube state is kept in a container volume (not mounted from host) to avoid path issues
+  // Ensure these paths exist on your host before starting the dev container:
   // - Files: ~/.zshrc, ~/.zsh_history, ~/.gitconfig
-  // - Directories: ~/.oh-my-zsh, ~/.kube, ~/.config/helm, ~/.minikube
-  // Ensure they exist locally before starting the dev container.
+  // - Directories: ~/.oh-my-zsh, ~/.kube, ~/.config/helm
+  // - Socket: ~/.orbstack/run/docker.sock (or /var/run/docker.sock for Docker Desktop)
   "mounts": [
     // FILE
     "source=${localEnv:HOME}/.zshrc,target=/home/vscode/.zshrc,type=bind,consistency=cached",
@@ -43,21 +30,36 @@
     "source=${localEnv:HOME}/.kube,target=/home/vscode/.kube,type=bind,consistency=cached",
     // DIR
     "source=${localEnv:HOME}/.config/helm,target=/home/vscode/.config/helm,type=bind,consistency=cached",
-    // DIR
-    "source=${localEnv:HOME}/.minikube,target=/home/vscode/.minikube,type=bind,consistency=cached"
+    // Docker backend: choose ONE of the following socket mounts.
+    // OrbStack on macOS (default):
+    "source=${localEnv:HOME}/.orbstack/run/docker.sock,target=/var/run/docker.sock,type=bind,consistency=cached",
+    // Docker Desktop on macOS or native Linux (uncomment to use):
+    // "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind,consistency=cached",
+    // VOLUME for minikube state (persists across container rebuilds, not synced to host)
+    "source=minikube-data,target=/home/vscode/.minikube,type=volume"
   ],
 
-  // Use 'postCreateCommand' to run commands after the container is created.
-  //// "postCreateCommand": "pip install --no-cache-dir -r requirements.txt",
+  // Install kubectl, helm, minikube, and configure tools after container creation
+  // First ensure all helper scripts are executable (Git doesn't preserve +x)
+  "postCreateCommand": "chmod +x /workspaces/k8s-supervised-learning-demo/.devcontainer/*.sh && bash /workspaces/k8s-supervised-learning-demo/.devcontainer/setup-tools.sh",
 
-  // Configure tool-specific properties.
-  // "customizations": {},
+  // Configure Docker socket permissions on container start
+  "postStartCommand": "bash /workspaces/k8s-supervised-learning-demo/.devcontainer/setup-docker-socket.sh",
+
+  // Force Docker CLI to use the mounted socket and set default SHELL for processes
+  "containerEnv": {
+    "DOCKER_HOST": "unix:///var/run/docker.sock",
+    "SHELL": "/usr/bin/zsh"
+  },
+
+  // VS Code extensions and settings for the container
   "customizations": {
     "vscode": {
       "extensions": [
         "ms-toolsai.jupyter",
         "ms-python.python",
-        "ms-python.vscode-pylance"
+        "ms-python.vscode-pylance",
+        "ms-vscode.makefile-tools"
       ],
       "settings": {
         "python.defaultInterpreterPath": "/usr/local/bin/python",
@@ -65,7 +67,4 @@
       }
     }
   }
-
-  // Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
-  // "remoteUser": "root"
 }

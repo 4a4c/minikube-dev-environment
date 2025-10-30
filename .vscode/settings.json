@@ -1,0 +1,29 @@
+{
+  // Status bar buttons (requires: usernamehw.vscode-status-bar-commands)
+  "statusbar.commands": [
+    {
+      "alignment": "right",
+      "priority": 100,
+      "text": "$(dashboard) Minikube",
+      "tooltip": "Open Kubernetes Dashboard (non-blocking)",
+      "command": "workbench.action.tasks.runTask",
+      "arguments": ["Minikube: Dashboard (Open)"]
+    },
+    {
+      "alignment": "right",
+      "priority": 99,
+      "text": "$(link) Dashboard URL",
+      "tooltip": "Print dashboard URL (starts proxy if needed)",
+      "command": "workbench.action.tasks.runTask",
+      "arguments": ["Minikube: Dashboard URL"]
+    },
+    {
+      "alignment": "right",
+      "priority": 98,
+      "text": "$(debug-stop) Stop Dashboard",
+      "tooltip": "Stop dashboard proxy",
+      "command": "workbench.action.tasks.runTask",
+      "arguments": ["Minikube: Dashboard Stop"]
+    }
+  ]
+}
