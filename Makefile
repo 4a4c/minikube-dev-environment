@@ -64,6 +64,7 @@ minikube-start-ml:
 	minikube start --driver=docker --native-ssh=false \
 		--cpus=4 --memory=8192 \
 		--addons=dashboard,metrics-server,storage-provisioner
+	# Reconcile kubectl to the server version (non-fatal on failure)
 	( bash .devcontainer/reconcile-kubectl.sh >/dev/null 2>&1 || true )
 	@echo ""
 	@echo "✅ ML cluster ready with metrics-server enabled"
