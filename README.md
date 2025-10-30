@@ -58,6 +58,15 @@ make minikube-status         # Verify it's running
 kubectl get pods -A          # Check system pods
 ```
 
+**AI/ML projects** (recommended for resource-intensive workloads):
+```bash
+make minikube-start-ml       # Start with 4 CPUs, 8GB RAM, metrics-server
+kubectl top nodes            # Monitor resource usage
+kubectl top pods -A          # Monitor pod resource usage
+make minikube-addons-list    # See other available addons
+make minikube-addons-enable ADDON=ingress  # Enable additional features
+```
+
 **Daily usage**:
 ```bash
 kubectl get nodes            # List cluster nodes
@@ -84,12 +93,15 @@ Run `make help` or `make` to see all available targets:
 
 **Cluster management**:
 - `minikube-start` — Start cluster (auto-reconciles kubectl)
+- `minikube-start-ml` — Start with AI/ML defaults (4 CPUs, 8GB RAM, metrics-server)
 - `minikube-start-verbose` — Start with debug logging
 - `minikube-stop` — Stop cluster
 - `minikube-delete` — Delete cluster
 - `minikube-status` — Show cluster status
 - `minikube-logs` — Print recent minikube logs
 - `minikube-docker-logs` — Print Docker container logs
+- `minikube-addons-list` — List available addons
+- `minikube-addons-enable` — Enable addon (e.g., `make minikube-addons-enable ADDON=ingress`)
 
 **Dashboard**:
 - `minikube-dashboard` — Open dashboard (non-blocking)
