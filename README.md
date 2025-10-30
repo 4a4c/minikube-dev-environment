@@ -1,4 +1,4 @@
-# k8s-supervised-learning-demo
+# minikube-dev-environment
 
 Developer environment configured with a Dev Container that includes kubectl, Helm, and Minikube, and connects to your host Docker (OrbStack or Docker Desktop).
 
