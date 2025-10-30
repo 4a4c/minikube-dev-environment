@@ -1,0 +1,71 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/python
+{
+  "name": "Python 3",
+  // Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
+  "image": "mcr.microsoft.com/devcontainers/python:2-3.12-bullseye",
+
+  // Features to add to the dev container. More info: https://containers.dev/features.
+  "features": {
+    "ghcr.io/devcontainers/features/common-utils:2": {
+      "installZsh": true,
+      "installOhMyZsh": true,
+      "upgradePackages": true,
+      "username": "vscode",
+      "userUid": "automatic",
+      "userGid": "automatic"
+    },
+    "ghcr.io/devcontainers/features/kubectl-helm-minikube:1": {
+      "version": "latest",
+      "helm": "latest",
+      "minikube": "latest"
+    }
+  },
+
+  // Use 'forwardPorts' to make a list of ports inside the container available locally.
+  // "forwardPorts": [],
+
+  // Mount local shell and git configuration
+  // Files vs directories on host:
+  // - Files: ~/.zshrc, ~/.zsh_history, ~/.gitconfig
+  // - Directories: ~/.oh-my-zsh, ~/.kube, ~/.config/helm, ~/.minikube
+  // Ensure they exist locally before starting the dev container.
+  "mounts": [
+    // FILE
+    "source=${localEnv:HOME}/.zshrc,target=/home/vscode/.zshrc,type=bind,consistency=cached",
+    // DIR
+    "source=${localEnv:HOME}/.oh-my-zsh,target=/home/vscode/.oh-my-zsh,type=bind,consistency=cached",
+    // FILE
+    "source=${localEnv:HOME}/.zsh_history,target=/home/vscode/.zsh_history,type=bind,consistency=cached",
+    // FILE
+    "source=${localEnv:HOME}/.gitconfig,target=/home/vscode/.gitconfig,type=bind,consistency=cached",
+    // DIR
+    "source=${localEnv:HOME}/.kube,target=/home/vscode/.kube,type=bind,consistency=cached",
+    // DIR
+    "source=${localEnv:HOME}/.config/helm,target=/home/vscode/.config/helm,type=bind,consistency=cached",
+    // DIR
+    "source=${localEnv:HOME}/.minikube,target=/home/vscode/.minikube,type=bind,consistency=cached"
+  ],
+
+  // Use 'postCreateCommand' to run commands after the container is created.
+  //// "postCreateCommand": "pip install --no-cache-dir -r requirements.txt",
+
+  // Configure tool-specific properties.
+  // "customizations": {},
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-toolsai.jupyter",
+        "ms-python.python",
+        "ms-python.vscode-pylance"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "/usr/local/bin/python",
+        "terminal.integrated.defaultProfile.linux": "zsh"
+      }
+    }
+  }
+
+  // Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
+  // "remoteUser": "root"
+}
