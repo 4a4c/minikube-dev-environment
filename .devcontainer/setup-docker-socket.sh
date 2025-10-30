@@ -13,10 +13,35 @@ if [ ! -S /var/run/docker.sock ]; then
     exit 0
 fi
 
-echo "Configuring Docker socket permissions..."
+if [ ! -S /var/run/docker.sock ]; then
+    echo "Docker socket not found, skipping permission setup (will still start SSH forwarder)"
+else
+    echo "Configuring Docker socket permissions..."
 
-# Get the group ID of the Docker socket
-DOCKER_GID=$(stat -c '%g' /var/run/docker.sock)
+    # Get the group ID of the Docker socket
+    DOCKER_GID=$(stat -c '%g' /var/run/docker.sock)
+
+    # Create or update the docker group to match the socket's GID
+    if getent group docker >/dev/null; then
+        $SUDO groupmod -o -g "$DOCKER_GID" docker || true
+    else
+        $SUDO groupadd -g "$DOCKER_GID" docker || true
+    fi
+
+    # Add vscode and root users to the docker group (ignore if user doesn't exist)
+    ($SUDO usermod -aG docker vscode || true)
+    ($SUDO usermod -aG docker root || true)
+
+    # Ensure the socket has group read/write permissions
+    $SUDO chmod g+rw /var/run/docker.sock || true
+
+    # Set ACL to grant vscode user direct access (fallback for root:root owned sockets)
+    if command -v setfacl >/dev/null 2>&1; then
+        $SUDO setfacl -m u:vscode:rw /var/run/docker.sock || true
+    fi
+
+    echo "Docker socket permissions configured successfully"
+fi
 
 # Create or update the docker group to match the socket's GID
 if getent group docker >/dev/null; then

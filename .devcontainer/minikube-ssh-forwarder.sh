@@ -26,13 +26,27 @@ minikube_host_port() {
   docker container inspect -f '{{(index (index .NetworkSettings.Ports "22/tcp") 0).HostPort}}' minikube 2>/dev/null || true
 }
 
+is_forwarder_running() {
+  local port="$1"
+  local pid_file="$SOCAT_PID_PREFIX.$port.pid"
+  if [ -f "$pid_file" ]; then
+    local pid
+    pid="$(cat "$pid_file" 2>/dev/null || true)"
+    if [ -n "${pid:-}" ] && kill -0 "$pid" 2>/dev/null; then
+      return 0
+    fi
+    # stale pid file
+    rm -f "$pid_file" || true
+  fi
+  return 1
+}
+
 start_forward_for_port() {
   local port="$1"
   if [ -z "$port" ]; then
     return 1
   fi
-  # If already listening with socat on this port, do nothing
-  if netstat -tlnp 2>/dev/null | grep -qE ":${port}\\b" | grep -q socat 2>/dev/null; then
+  if is_forwarder_running "$port"; then
     return 0
   fi
   log "Starting socat forwarder for port $port -> host.docker.internal:$port"

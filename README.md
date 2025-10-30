@@ -1,15 +1,38 @@
 # k8s-supervised-learning-demo
 
-Developer environment is configured with a Dev Container that includes kubectl, Helm, and Minikube, and connects to your host Docker (OrbStack or Docker Desktop).
+Developer environment configured with a Dev Container that includes kubectl, Helm, and Minikube, and connects to your host Docker (OrbStack or Docker Desktop).
 
 ## Quick start
 
-1. Open in VS Code and Rebuild the Dev Container:
-   - Command Palette → "Dev Containers: Rebuild Container"
-2. Verify tools:
-   - `kubectl version --client`
-   - `helm version`
-   - `docker ps`
+1. **Open in VS Code and build the Dev Container**:
+   - Command Palette → "Dev Containers: Reopen in Container"
+   - Wait for the build to complete (installs kubectl, helm, minikube, zsh, Oh My Zsh)
+
+2. **Start a local Kubernetes cluster**:
+   ```bash
+   make minikube-start
+   ```
+   - This creates a single-node cluster using the Docker driver
+   - kubectl is auto-reconciled to match the cluster version (v1.34.0)
+   - Takes ~30-60s on first run
+
+3. **Verify everything works**:
+   ```bash
+   make minikube-status      # Check cluster health
+   kubectl get nodes         # Should show 1 Ready node
+   kubectl get pods -A       # List all system pods
+   ```
+
+4. **Optional: Open the Kubernetes Dashboard**:
+   - Via task: Command Palette → "Tasks: Run Task" → "Minikube: Dashboard (Open)"
+   - Or: `make minikube-dashboard`
+   - Or: Press `Ctrl+Alt+D` (opens in your host browser)
+
+5. **Stop/delete when done**:
+   ```bash
+   make minikube-stop        # Pause the cluster (keeps state)
+   make minikube-delete      # Fully remove the cluster
+   ```
 
 ## Host integrations
 
@@ -22,23 +45,66 @@ Developer environment is configured with a Dev Container that includes kubectl, 
 
 **Note**: Minikube state is kept inside the container (not synced to host) to avoid path conflicts. Your kubeconfig in `~/.kube` will still reference the minikube cluster correctly.
 
-## Using Minikube
+## Working with the environment
 
-You can use Makefile targets or VS Code tasks.
+You can use Makefile targets, VS Code tasks, or direct commands.
 
-### Makefile targets
+### Common workflows
 
-- Start cluster: `make minikube-start`
-- Stop cluster: `make minikube-stop`
-- Delete cluster: `make minikube-delete`
-- Status: `make minikube-status`
-- Dashboard: `make minikube-dashboard`
-- Nodes: `make k8s-nodes`
-- Contexts: `make k8s-contexts`
-- Cluster info: `make cluster-info`
-- Helm version: `make helm-version`
-- Version-matched kubectl: `make k CMD='get pods -A'`
-- Reconcile kubectl to cluster version: `make kubectl-reconcile`
+**Starting fresh**:
+```bash
+make minikube-start          # Create and start cluster
+make minikube-status         # Verify it's running
+kubectl get pods -A          # Check system pods
+```
+
+**Daily usage**:
+```bash
+kubectl get nodes            # List cluster nodes
+kubectl get pods -A          # List all pods
+make cluster-info            # Show endpoints
+make minikube-dashboard      # Open dashboard in browser
+```
+
+**Version-matched kubectl**:
+```bash
+make k CMD='get pods -A'     # Use minikube's embedded kubectl (always matched)
+make kubectl-reconcile       # Install kubectl binary matching cluster version
+```
+
+**Cleanup**:
+```bash
+make minikube-stop           # Pause cluster (state preserved)
+make minikube-delete         # Remove cluster completely
+```
+
+### All Makefile targets
+
+Run `make help` or `make` to see all available targets:
+
+**Cluster management**:
+- `minikube-start` — Start cluster (auto-reconciles kubectl)
+- `minikube-start-verbose` — Start with debug logging
+- `minikube-stop` — Stop cluster
+- `minikube-delete` — Delete cluster
+- `minikube-status` — Show cluster status
+- `minikube-logs` — Print recent minikube logs
+- `minikube-docker-logs` — Print Docker container logs
+
+**Dashboard**:
+- `minikube-dashboard` — Open dashboard (non-blocking)
+- `minikube-dashboard-url` — Print dashboard URL
+- `minikube-dashboard-stop` — Stop dashboard proxy
+
+**Kubernetes**:
+- `k8s-nodes` — Show nodes
+- `k8s-contexts` — List kubeconfig contexts
+- `cluster-info` — Show cluster endpoints
+- `k` / `kubectl-mk` — Version-matched kubectl (pass `CMD='...'`)
+- `kubectl-reconcile` — Install kubectl matching server version
+
+**Helm**:
+- `helm-version` — Show Helm version
 
 ### SSH forwarding inside Dev Container
 
@@ -74,14 +140,23 @@ This devcontainer also auto-reconciles `/usr/local/bin/kubectl` to match the run
 - Re-run: `make kubectl-reconcile`
 - Or use the embedded client: `make k CMD='...'`
 
-### VS Code tasks
+### VS Code integration
 
-Command Palette → "Tasks: Run Task" and pick one of:
-
+**Tasks**: Command Palette → "Tasks: Run Task" and pick one of:
 - Minikube: Start / Stop / Delete / Status
 - Kubernetes: Nodes / Contexts / Cluster Info
 - Helm: Version
- - Dashboard: Open / URL / Stop
+- Dashboard: Open / URL / Stop
+
+**Status bar buttons** (requires extension install prompt on first use):
+- 🎯 Minikube — Open dashboard
+- 🔗 Dashboard URL — Print URL
+- ⏹️ Stop Dashboard — Stop proxy
+
+**Keyboard shortcuts**:
+- `Ctrl+Alt+D` — Open dashboard
+- `Ctrl+Alt+U` — Print dashboard URL
+- `Ctrl+Alt+X` — Stop dashboard
 
 ## Shell & prompt
 
@@ -90,10 +165,21 @@ Command Palette → "Tasks: Run Task" and pick one of:
 
 ## Troubleshooting
 
-- Permission denied on Docker socket:
-  - Open a new terminal or reload the window after container starts
-  - The container auto-aligns the docker group GID and sets ACLs
-- `newgrp` starts the wrong shell:
-  - The container sets zsh as the login shell; open a new terminal
-- OrbStack vs Docker Desktop:
-  - Update the docker socket mount path in `.devcontainer/devcontainer.json` accordingly
+**"Connection refused" when running `minikube status` directly**:
+- The SSH forwarder auto-starts on every new terminal
+- If you see this after a rebuild, open a new terminal or run: `make minikube-status` (self-healing)
+
+**Permission denied on Docker socket**:
+- Open a new terminal after container starts (auto-aligns docker group GID and ACLs)
+
+**kubectl version skew warning**:
+- Run `make kubectl-reconcile` to install a kubectl matching your cluster
+- Or use the matched client: `make k CMD='get pods -A'`
+
+**Switching Docker backends** (OrbStack ↔ Docker Desktop):
+- Edit `.devcontainer/devcontainer.json` and flip the commented mount under "Docker backend: choose ONE"
+- Rebuild the container
+
+**After `minikube delete`, start fails with SSH errors**:
+- This should be fixed automatically by the aggressive SSH bridge during start
+- If you still see issues, try: `make ENSURE_BRIDGE_SECS=60 minikube-start-verbose`

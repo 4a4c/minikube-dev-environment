@@ -9,24 +9,41 @@ export ENSURE_BRIDGE_SECS
 export ENSURE_BRIDGE_INTERVAL_SECS
 
 help:
-	@echo "Available targets:"
-	@echo "  minikube-start      Start a minikube cluster using Docker driver"
-	@echo "  minikube-start-verbose  Start with verbose logging and longer timeout (pass extra ARGS=...)"
-	@echo "  minikube-stop       Stop the minikube cluster"
-	@echo "  minikube-delete     Delete the minikube cluster"
-	@echo "  minikube-status     Show minikube status"
-	@echo "  minikube-dashboard  Open the Kubernetes dashboard (non-blocking, uses host browser if available)"
-	@echo "  minikube-dashboard-open  Start dashboard proxy in background and open in host browser"
-	@echo "  minikube-dashboard-url   Print dashboard URL (starts proxy if needed)"
-	@echo "  minikube-dashboard-stop  Stop dashboard proxy"
-	@echo "  minikube-logs       Print recent minikube logs"
-	@echo "  minikube-docker-logs  Print docker logs of the minikube node"
-	@echo "  k8s-nodes           Show Kubernetes nodes"
-	@echo "  k8s-contexts        List kubeconfig contexts"
-	@echo "  cluster-info        Show cluster info"
-	@echo "  helm-version        Show Helm client/server version"
-	@echo "  k / kubectl-mk      Use version-matched kubectl via 'minikube kubectl --' (pass CMD=...)"
-	@echo "  kubectl-reconcile   Install kubectl matching the cluster server version"
+	@echo "Kubernetes Dev Environment - Makefile Targets"
+	@echo ""
+	@echo "Quick Start:"
+	@echo "  make minikube-start          # Start local Kubernetes cluster"
+	@echo "  make minikube-status         # Check cluster health"
+	@echo "  kubectl get nodes            # Verify cluster is ready"
+	@echo "  make minikube-dashboard      # Open dashboard in browser"
+	@echo ""
+	@echo "Cluster Management:"
+	@echo "  minikube-start               Start cluster (auto-reconciles kubectl to v1.34.0)"
+	@echo "  minikube-start-verbose       Start with debug logs (pass ARGS='...' for extra flags)"
+	@echo "  minikube-stop                Stop cluster (preserves state)"
+	@echo "  minikube-delete              Delete cluster completely"
+	@echo "  minikube-status              Show cluster status (auto-heals SSH if needed)"
+	@echo "  minikube-logs                Print recent minikube logs"
+	@echo "  minikube-docker-logs         Print Docker container logs"
+	@echo ""
+	@echo "Dashboard:"
+	@echo "  minikube-dashboard           Open dashboard (non-blocking, uses host browser)"
+	@echo "  minikube-dashboard-url       Print dashboard URL"
+	@echo "  minikube-dashboard-stop      Stop dashboard proxy"
+	@echo ""
+	@echo "Kubernetes Tools:"
+	@echo "  k8s-nodes                    Show nodes"
+	@echo "  k8s-contexts                 List kubeconfig contexts"
+	@echo "  cluster-info                 Show cluster endpoints"
+	@echo "  k CMD='...'                  Version-matched kubectl (e.g., k CMD='get pods -A')"
+	@echo "  kubectl-reconcile            Install kubectl binary matching cluster version"
+	@echo ""
+	@echo "Helm:"
+	@echo "  helm-version                 Show Helm version"
+	@echo ""
+	@echo "Tunables:"
+	@echo "  ENSURE_BRIDGE_SECS=60        Extend SSH bridge enforcement during start"
+	@echo "  ENSURE_BRIDGE_INTERVAL_SECS=0.2  Change bridge polling interval"
 
 minikube-start:
 	# Ensure SSH bridge watcher is running and aggressively establish port forward during startup
@@ -45,12 +62,21 @@ minikube-start-verbose:
 	( bash .devcontainer/reconcile-kubectl.sh >/dev/null 2>&1 || true )
 
 minikube-stop:
+	# Ensure SSH bridge is in place before stopping
+	( bash .devcontainer/minikube-ssh-forwarder.sh run >/dev/null 2>&1 || true )
+	( bash .devcontainer/minikube-ssh-forwarder.sh once >/dev/null 2>&1 || true )
 	minikube stop
 
 minikube-delete:
+	# Ensure SSH bridge is in place before deleting
+	( bash .devcontainer/minikube-ssh-forwarder.sh run >/dev/null 2>&1 || true )
+	( bash .devcontainer/minikube-ssh-forwarder.sh once >/dev/null 2>&1 || true )
 	minikube delete
 
 minikube-status:
+	# Ensure SSH bridge is in place before querying status
+	( bash .devcontainer/minikube-ssh-forwarder.sh run >/dev/null 2>&1 || true )
+	( bash .devcontainer/minikube-ssh-forwarder.sh once >/dev/null 2>&1 || true )
 	minikube status
 
 minikube-dashboard:
@@ -85,6 +111,9 @@ kubectl-reconcile:
 	bash .devcontainer/reconcile-kubectl.sh
 
 minikube-logs:
+	# Ensure SSH bridge is in place before fetching logs
+	( bash .devcontainer/minikube-ssh-forwarder.sh run >/dev/null 2>&1 || true )
+	( bash .devcontainer/minikube-ssh-forwarder.sh once >/dev/null 2>&1 || true )
 	minikube logs --file=- | tail -n 200 || true
 
 minikube-docker-logs:

@@ -75,4 +75,14 @@ echo "Making devcontainer helper scripts executable..."
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 chmod +x "$SCRIPT_DIR"/*.sh 2>/dev/null || true
 
+# Ensure an interactive zsh shell auto-starts the minikube SSH forwarder (idempotent)
+echo "Installing zsh hook to auto-start minikube SSH forwarder..."
+ZSHRC_FILE="/etc/zsh/zshrc"
+HOOK_MARKER="# Auto-start minikube SSH forwarder watcher (idempotent)"
+HOOK_SCRIPT='\n# Auto-start minikube SSH forwarder watcher (idempotent)\nif [ -f /workspaces/k8s-supervised-learning-demo/.devcontainer/minikube-ssh-forwarder.sh ]; then\n  bash /workspaces/k8s-supervised-learning-demo/.devcontainer/minikube-ssh-forwarder.sh run >/dev/null 2>&1 || true\nfi\n'
+if ! grep -Fq "$HOOK_MARKER" "$ZSHRC_FILE" 2>/dev/null; then
+  echo "Adding forwarder hook to $ZSHRC_FILE"
+  echo -e "$HOOK_SCRIPT" | $SUDO tee -a "$ZSHRC_FILE" >/dev/null
+fi
+
 echo "Setup complete!"
